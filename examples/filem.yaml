@@ -1,0 +1,27 @@
+folders:
+  - location: examples/filedrop
+    filter: "area(?P<id>[0-9]{3}).txt"
+    targetName: "area-%(id)/%(yyyy-mm)/%(yyyy-mm-dd)_%(uid).txt"
+    onSuccess: delete
+    format: txt
+    #contentType: text/csv
+    tags:
+      source: filedrop
+      version: 1
+      env: prod
+      type: delta
+
+storage:
+  azure:
+    account: $(AZURE_ACCOUNT)
+    key: $(AZURE_ACCESSKEY)
+    container: $(AZURE_CONTAINER)
+    sasTimeout: 192h # 8 days -> 192 hours
+
+message:
+  format: default/json
+  kafka:
+    endpoint: SASL_SSL://$(KAFKA_HOST).westeurope.azure.confluent.cloud:9092
+    topic: $(KAFKA_TOPIC)
+    key: $(KAFKA_APIKEY)
+    secret: $(KAFKA_SECRET)
