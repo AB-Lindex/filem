@@ -19,7 +19,7 @@ type argStruct struct {
 }
 
 func (argStruct) Version() string {
-	return "filem v?"
+	return versionFunc()
 }
 
 type configStruct struct {
