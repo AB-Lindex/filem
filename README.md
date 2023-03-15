@@ -52,7 +52,7 @@ The `externalData` is meant to be accessible by a plain HTTP GET using the speci
 Please see the `Makefile` and the `examples`-folder
 
 ## Configuration
-The `filem.yaml` has 3 parts: Folders, Storage and Message
+The `filem.yaml` has 3 parts: Folders, Storage and Message, and 1 optional: Metrics
 
 Enviroment variables can be use in the file using the `$(ENV_VAR_NAME)` notation (see below)
 
@@ -119,3 +119,14 @@ message:
 ### Supported messaging systems
 * Kafka
 
+## Metric-settings
+```yaml
+metrics:
+  prompush:
+    url: http://localhost:9091  # Address to pushgateway (no path)
+    job: filem_example          # job-label ("filem" by default)
+    instance: example-instance  # instance-label (hostname by default)
+```
+
+### Supported metrics systems
+* Prometheus Pushgateway

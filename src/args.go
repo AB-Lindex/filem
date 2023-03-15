@@ -26,6 +26,7 @@ type configStruct struct {
 	Folders []folderStruct `yaml:"folders"`
 	Storage storageConfig  `yaml:"storage"`
 	Message messageConfig  `yaml:"message"`
+	Metrics metricsConfig  `yaml:"metrics"`
 }
 
 var args argStruct

@@ -25,3 +25,9 @@ message:
     topic: $(KAFKA_TOPIC)
     key: $(KAFKA_APIKEY)
     secret: $(KAFKA_SECRET)
+
+metrics:
+  prompush:
+    url: http://localhost:9091
+    job: filem_example
+    instance: example-instance

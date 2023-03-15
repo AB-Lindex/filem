@@ -3,7 +3,7 @@ help:
 
 init-example:
 	mkdir -p examples/filedrop
-	echo "this file will not match" examples/filedrop/area5.txt
+	echo "this file will not match" >examples/filedrop/area5.txt
 	fortune >examples/filedrop/area001.txt
 	date >examples/filedrop/area314.txt
 

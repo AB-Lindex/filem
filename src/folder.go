@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AB-Lindex/filem/src/message"
+	"github.com/AB-Lindex/filem/src/metrics"
 	"github.com/AB-Lindex/filem/src/storage"
 	"github.com/ninlil/envsubst"
 	"github.com/rs/zerolog/log"
@@ -30,9 +31,38 @@ type folderStruct struct {
 	varNames []string
 
 	deleteOnSuccess bool
+
+	noMatch       int
+	matched       int
+	nameFailed    int
+	saveFailed    int
+	sendError     int
+	sendMissingID int
+	done          int
+	deleted       int
+	deleteFailed  int
 }
 
-func (f *folderStruct) Process(store storage.Storage, sender message.Sender, dryRun bool) (fileCount int) {
+func (f *folderStruct) SetMetrics(metric metrics.Target, dryRun bool) {
+	var keys = map[string]interface{}{
+		"folder": f.Location,
+	}
+
+	metric.Set(metrics.FilesMatched, f.matched, keys)
+	metric.Set(metrics.FilesUnmatched, f.noMatch, keys)
+	metric.Set(metrics.FilesDone, f.done, keys)
+
+	metric.Set(metrics.NamegenFailed, f.nameFailed, keys)
+	metric.Set(metrics.SaveFailed, f.saveFailed, keys)
+	metric.Set(metrics.SendFailed, f.sendError, keys)
+	metric.Set(metrics.SendMissingID, f.sendMissingID, keys)
+
+	metric.Set(metrics.FilesDeletes, f.deleted, keys)
+	metric.Set(metrics.FilesDeleteFailed, f.deleteFailed, keys)
+}
+
+func (f *folderStruct) Process(store storage.Storage, sender message.Sender, metric metrics.Target, dryRun bool) (fileCount int) {
+	defer f.SetMetrics(metric, dryRun)
 
 	f.OnSuccess = strings.ToLower(f.OnSuccess)
 	switch f.OnSuccess {
@@ -131,8 +161,10 @@ func (f *folderStruct) handleFile(store storage.Storage, sender message.Sender, 
 	name := fi.Name()
 	match := f.regexp.FindStringSubmatch(name)
 	if match == nil {
+		f.noMatch++
 		return 0
 	}
+	f.matched++
 
 	log.Info().Msgf("processing '%s'", name)
 
@@ -154,6 +186,7 @@ func (f *folderStruct) handleFile(store storage.Storage, sender message.Sender, 
 
 	blobName := f.makeTargetName(name, match)
 	if blobName == "" {
+		f.nameFailed++
 		return 0
 	}
 
@@ -161,6 +194,7 @@ func (f *folderStruct) handleFile(store storage.Storage, sender message.Sender, 
 	obj, err := store.Save(blobName, location, f.ContentType, fi.Size(), dryRun)
 	if err != nil {
 		log.Error().Msgf("save-error: %v", err)
+		f.saveFailed++
 		return 0
 	}
 
@@ -177,21 +211,27 @@ func (f *folderStruct) handleFile(store storage.Storage, sender message.Sender, 
 	id, err := sender.Send(data, nil, dryRun)
 	if err != nil {
 		log.Error().Msgf("send-error: %v", err)
+		f.sendError++
 		return 0
 	}
 	if id == "" {
 		log.Error().Msg("send-failed: no id")
+		f.sendMissingID++
 		return 0
 	}
 	log.Info().Msgf("message sent with id: %s", id)
+	f.done++
 
 	// all done
 	if f.deleteOnSuccess {
+		f.deleted++
 		if dryRun {
 			log.Info().Msgf("dry-run: '%s' would be removed", name)
 		} else {
 			err = os.Remove(location)
 			if err != nil {
+				f.deleted--
+				f.deleteFailed++
 				log.Error().Msgf("unable to delete '%s': %v", name, err)
 			} else {
 				log.Info().Msgf("'%s' removed", name)
