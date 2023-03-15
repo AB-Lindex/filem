@@ -23,7 +23,7 @@ Options:
 ## Message result
 (currently only JSON)
 
-Message is constructed using an "externalData" object containing the link to the resource and some generated valies (starting with '`_`'), static values from the Folder-setting and the dynamic values extracted in the file-matching.
+Message is constructed using an "externalData" object containing the link to the resource and some generated values (starting with '`_`'), static values from the Folder-setting and the dynamic values extracted in the file-matching.
 ```json
 {
   "_filename": "area314.txt",
