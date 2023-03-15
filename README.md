@@ -123,9 +123,7 @@ message:
 ```yaml
 metrics:
   prompush:
-    url: http://localhost:9091  # Address to pushgateway (no path)
-    job: filem_example          # job-label ("filem" by default)
-    instance: example-instance  # instance-label (hostname by default)
+    url: http://localhost:9091/metrics/job/filem_example/instance/example-instance
 ```
 
 ### Supported metrics systems

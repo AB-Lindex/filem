@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 
@@ -15,13 +14,12 @@ import (
 
 // Settings contain the settings and stored metric-values
 type Settings struct {
-	URL      string            `yaml:"url"` // http://PUSHGATEWAY_FQDN
-	Job      string            `yaml:"job"`
-	Instance string            `yaml:"instance"`
-	Labels   map[string]string `yaml:"labels"`
-	Vars     []string          `yaml:"vars"`
+	URL    string            `yaml:"url"` // http://PUSHGATEWAY_FQDN/metrics/job/JOB/instance/INSTANCE
+	Labels map[string]string `yaml:"labels"`
+	Vars   []string          `yaml:"vars"`
 
 	values map[string]interface{}
+	dryRun bool
 }
 
 var (
@@ -30,25 +28,8 @@ var (
 )
 
 // GetHandler returns the metric.Target for the pushgateway-handler
-func (t *Settings) GetHandler() (metrics.Target, error) {
-
-	if strings.ContainsAny(t.Job, "\\/ ") ||
-		strings.ContainsAny(t.Instance, "\\/ ") {
-		return nil, errNoSlashes
-	}
-
-	if t.Job == "" {
-		t.Job = "filem"
-	}
-
-	if t.Instance == "" {
-		t.Instance, _ = os.Hostname()
-		t.Instance = strings.ToLower(t.Instance)
-	}
-	if t.Instance == "" {
-		t.Instance = "default"
-	}
-
+func (t *Settings) GetHandler(dryRun bool) (metrics.Target, error) {
+	t.dryRun = dryRun
 	return t, nil
 }
 
@@ -143,14 +124,13 @@ func (t *Settings) Send() error {
 	buf := body.Bytes()
 	body = bytes.NewBuffer(buf) // reset position
 
-	url := fmt.Sprintf("%s/metrics/job/%s/instance/%s", t.URL, t.Job, t.Instance)
-	for k, v := range t.Labels {
-		url += fmt.Sprintf("/%s/%s", k, v)
+	if t.dryRun {
+		log.Debug().Msgf("Pushgateway url: %s", t.URL)
+		fmt.Println(string(buf))
+		return nil
 	}
-	log.Debug().Msgf("Pushgateway url: %s", url)
-	fmt.Println(string(buf))
 
-	req, err := http.NewRequest("POST", url, body)
+	req, err := http.NewRequest("POST", t.URL, body)
 	if err != nil {
 		return err
 	}

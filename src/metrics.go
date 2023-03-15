@@ -23,8 +23,8 @@ var fallback *metricsFallback
 
 func (mc *metricsConfig) Connect(dryRun bool) (metrics.Target, error) {
 	if mc.PromPush != nil {
-		return mc.PromPush.GetHandler()
+		return mc.PromPush.GetHandler(dryRun)
 	}
-	// if no metrics is defined, return a fallback "dud"
+	// if no metrics is defined, return a fallback empty implementation
 	return fallback, nil
 }

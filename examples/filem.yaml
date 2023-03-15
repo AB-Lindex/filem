@@ -28,6 +28,4 @@ message:
 
 metrics:
   prompush:
-    url: http://localhost:9091
-    job: filem_example
-    instance: example-instance
+    url: http://localhost:9091/metrics/job/filem_example/instance/example-instance
