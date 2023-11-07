@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/AB-Lindex/filem/src/helpers"
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 // Config is the Kafka-config that is imported in the `message`-object in the app
