@@ -20,8 +20,11 @@ build:
 	CGO_ENABLED=0 go build -o bin/filem ./src
 
 release:
-	gh release create $(TAG) -t $(TAG)
-
+	@echo -n "Latest release"
+	@gh release list -L 1 | cat
+	@echo ""
+	gh release create
+	
 check:
 	@echo "Checking...\n"
 	gocyclo -over 15 . || echo -n ""
